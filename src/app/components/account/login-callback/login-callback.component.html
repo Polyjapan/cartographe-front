@@ -1,0 +1,38 @@
+
+
+<div fxLayout fxLayoutAlign="center" style="margin-top: 25px;">
+  <div fxFlex="1 1 95%" fxFlexAlign="center">
+    <mat-card>
+      <ng-container *ngIf="done; else loading">
+        <ng-template #failed>
+          <mat-card-title>Échec de connexion</mat-card-title>
+          <mat-card-content>
+            <p>Une erreur s'est produite lors de la connexion à ce service. Prière de bien vouloir réessayer.</p>
+          </mat-card-content>
+          <mat-card-actions>
+            <a mat-flat-button [routerLink]="['/', 'require-login']">Réessayer</a>
+          </mat-card-actions>
+        </ng-template>
+        <ng-container *ngIf="success ; else failed">
+          <mat-card-title>Connexion réussie</mat-card-title>
+          <mat-card-content>
+            <p>Vous allez être redirigé·e vers l'accueil dans quelques instants...</p>
+          </mat-card-content>
+          <mat-card-actions>
+            <a mat-flat-button [routerLink]="['/']">Je ne suis pas redirigé·e</a>
+          </mat-card-actions>
+        </ng-container>
+      </ng-container>
+      <ng-template #loading>
+        <mat-card-title>Connexion en cours...</mat-card-title>
+        <mat-card-content>
+          <p>Vous allez être redirigé·e dans quelques instants, veuillez patienter...</p>
+        </mat-card-content>
+        <mat-card-footer>
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        </mat-card-footer>
+      </ng-template>
+
+    </mat-card>
+  </div>
+</div>

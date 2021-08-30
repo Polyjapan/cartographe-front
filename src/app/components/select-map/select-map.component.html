@@ -1,0 +1,14 @@
+
+
+<ng-template #loading><mat-spinner></mat-spinner></ng-template>
+<ng-container *ngIf="currentMap$ | async as currentMap ; else loading">
+  <button mat-button [matMenuTriggerFor]="menu">
+    {{currentMap.title}}
+    <mat-icon>expand_more</mat-icon>
+  </button>
+  <mat-menu #menu="matMenu">
+    <ng-container *ngIf="maps$ | async as maps">
+      <button mat-menu-item *ngFor="let map of maps" (click)="switchTo(map.mapId)">{{map.title}}</button>
+    </ng-container>
+  </mat-menu>
+</ng-container>

@@ -1,6 +1,7 @@
-export interface WMSLayerDef {
+import {Style} from "../styles/Style";
+
+export interface WMSLayerDef extends LayerDef {
   params: any;
-  title: string;
   url: string;
   dimensions: string[];
   dimensionName: string;
@@ -12,9 +13,20 @@ export interface LayerGroupDef<T> {
   layers: T[];
 }
 
-export interface GeoJsonLayer {
-  name: string;
+export interface GeoJsonLayer extends LayerDef {
   features: [];
+  style?: Style;
+}
+
+export interface LayerDef {
+  title: string;
+  tableName: string;
+}
+
+export interface MapDef {
+  mapId: number;
+  title: string;
+  description: string;
 }
 
 /*

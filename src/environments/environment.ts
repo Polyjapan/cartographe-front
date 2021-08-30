@@ -5,7 +5,12 @@
 export const environment = {
   production: false,
 
-  backend: "http://localhost:9000/"
+  backend: "http://localhost:9000",
+  apidomain: "localhost:9000",
+
+  auth: {
+    apiurl: 'https://auth.japan-impact.ch',
+  }
 };
 
 /*

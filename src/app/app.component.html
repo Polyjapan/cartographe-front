@@ -1,7 +1,15 @@
+<mat-toolbar>
+  <span [routerLink]="'/'">Cartographe</span>
+  <span class="spacer"></span>
+  <app-select-map></app-select-map>
+  <ng-template #loggedOut>
+    <button [routerLink]="['/', 'require-login']" mat-button>Connexion <mat-icon>login</mat-icon></button>
+  </ng-template>
+  <ng-container *ngIf="auth.isAuthenticated() ; else loggedOut">
+    <button *ngIf="auth.isAuthenticated()" mat-button (click)="auth.logout()">
+      <mat-icon>logout</mat-icon> {{auth.getToken()?.firstName}}
+    </button>
+  </ng-container>
+</mat-toolbar>
 
-<div id="map" class="map">
-  <div id="popup" class="ol-popup">
-    <a href="#" id="popup-closer" class="ol-popup-closer" (click)="closePopup()"></a>
-    <div id="popup-content"></div>
-  </div>
-</div>
+<router-outlet></router-outlet>

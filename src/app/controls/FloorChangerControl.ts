@@ -1,8 +1,9 @@
 import {Control} from "ol/control";
 import {AppComponent} from "../app.component";
+import {MapComponent} from "../components/map/map.component";
 
 export class FloorChangerControl extends Control {
-  constructor(component: AppComponent, opt_options: any) {
+  constructor(component: MapComponent, opt_options: any) {
     const options = opt_options || {};
 
     // TODO: add display feedback of currently selected floor :) (should observe something from the other component)

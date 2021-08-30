@@ -1,0 +1,10 @@
+<mat-list>
+  <h2 matSubheader>Attributs {{features.length > 1 ? 'des entités' : 'de l\'entité'}}</h2>
+  <ng-container *ngFor="let f of features">
+    <h3 matSubheader>Couche : {{f[1].getProperties()['title']}}</h3>
+
+    <mat-list-item>Lien direct : <button mat-button (click)="copyLink(f[0])"><mat-icon>link</mat-icon> Copier</button></mat-list-item>
+
+    <mat-list-item *ngFor="let e of f[0]"><strong>{{e[0]}}</strong>: {{e[1]}}</mat-list-item>
+  </ng-container>
+</mat-list>

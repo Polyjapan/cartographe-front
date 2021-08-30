@@ -1,0 +1,12 @@
+<mat-sidenav-container>
+  <mat-sidenav #drawer position="end"
+               class="sidenav"
+               style="min-width: 15%; max-width: 200rem;"
+               mode="side"
+  >
+    <app-sidebar #sidebar [drawer]="drawer"></app-sidebar>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <app-map [sidebar]="sidebar"></app-map>
+  </mat-sidenav-content>
+</mat-sidenav-container>

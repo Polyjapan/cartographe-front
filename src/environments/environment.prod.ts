@@ -1,5 +1,11 @@
 export const environment = {
   production: true,
 
-  backend: "http://localhost:9000/"
+  backend: "https://cartographe.japan-impact.ch/api",
+  apidomain: "cartographe.japan-impact.ch",
+
+
+  auth: {
+    apiurl: 'https://auth.japan-impact.ch',
+  }
 };
