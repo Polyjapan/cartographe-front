@@ -1,7 +1,7 @@
-import {Component, Input, OnChanges, OnInit, SimpleChanges} from '@angular/core';
+import {Component, Input, OnInit} from '@angular/core';
 import LayerGroup from "ol/layer/Group";
 import * as proj4x from "proj4";
-import {Map, Overlay, View} from "ol";
+import {Collection, Feature, Map, View} from "ol";
 import {HttpClient} from "@angular/common/http";
 import {get} from "ol/proj";
 import {defaults as defaultControls} from "ol/control";
@@ -13,9 +13,6 @@ import {GeoJSON, WMTSCapabilities} from "ol/format";
 import {optionsFromCapabilities} from "ol/source/WMTS";
 import {Layer, Tile} from "ol/layer";
 import {TileWMS, WMTS} from "ol/source";
-import {Observable} from "rxjs";
-import {GeoJsonLayer, LayerGroupDef, WMSLayerDef} from "../../data/LayerDefs";
-import {environment} from "../../../environments/environment";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 import {Fill, Stroke, Style} from "ol/style";
@@ -38,37 +35,18 @@ export class MapComponent implements OnInit {
 
   currentFloor: LayerGroup[] = []
 
-  jump: {layer: string|null, jump: string|null, dimension: string|null} = { layer: null, jump: null, dimension: null }
+  selectionOverlay?: VectorLayer<VectorSource<any>>;
 
+  jump: { layer: string | null, jump: string | null, dimension: string | null } = {
+    layer: null,
+    jump: null,
+    dimension: null
+  }
+  selected: Feature<any>[] = [];
   private proj4 = (proj4x as any).default
   private olMap: Map = new Map({});
 
   constructor(private http: HttpClient, private route: ActivatedRoute, private maps: MapsService) {
-  }
-
-  private onClick(map: Map, event: any) {
-    this.closePopup()
-
-    const pixel = map.getEventPixel(event.originalEvent)
-    const features: [any, Layer<any>][] = [];
-    map.forEachFeatureAtPixel(pixel, (feature, layer) => {
-
-      const attributes: [string, string][] = []
-
-      for (let k of (feature as any).getKeys()) {
-        if (k === 'geometry' || !feature.get(k) || feature.get(k) === "null") continue;
-
-        attributes.push([k, feature.get(k)])
-
-      }
-
-      const element: [any, Layer<any>] = [attributes, layer]
-      features.push(element)
-    })
-
-    if (features.length > 0) {
-      this.sidebar?.setFeatures(this.dimension, features)
-    }
   }
 
   changeFloor(dim: string) {
@@ -78,67 +56,49 @@ export class MapComponent implements OnInit {
   }
 
   loadFloor() {
+    console.log("Load floor called")
+
     if (this.maps.mapId === 0)
       return;
 
-    this.getWMSLayers().toPromise().then(grps => {
+    this.getWMSLayers().then(grps => {
       grps.forEach(grp => {
         this.olMap.addLayer(grp);
         this.currentFloor.push(grp);
       })
     })
-    this.getGeoJsonLayers().toPromise().then(grps => {
-      grps.forEach(grp => {
-        this.olMap.addLayer(grp);
-        this.currentFloor.push(grp);
-      });
-      this.doJump();
-    })
+      .then(() => this.getGeoJsonLayers())
+      .then(grps => {
+        grps.forEach(grp => {
+          console.log("Adding layer " + grp.getProperties()['title'])
+          this.olMap.addLayer(grp);
+          this.currentFloor.push(grp);
+        })
+      })
+      .then(() => this.doJump());
+
   }
 
-  private recursiveJump(layer: BaseLayer) {
-    if ((layer as any).getLayers) {
-      (layer as LayerGroup).getLayers().forEach(layer => this.recursiveJump(layer))
-    } else {
-      if (layer.getProperties().tableName && layer.getProperties().tableName === this.jump.layer) {
-        console.log((layer as Layer<any>).getSource().getFeatureByUid(20))
-        const feature = (layer as Layer<any>).getSource().getFeatureById(this.jump.jump);
-        const center = getCenter(feature.getGeometry().getExtent())
-        this.olMap.getView().setCenter(center);
-        this.olMap.getView().setZoom(21);
-        // this.olMap.getView().fit(feature.getGeometry().getExtent())
-      }
+  private parseGetParameters() {
+    // Don't need to keep an observable on the route, we only want to take this into account on first load
+    const map = this.route.snapshot.queryParamMap
+
+    const floor = map.get('floor')
+    if (floor) {
+      this.dimension = floor;
     }
-  }
 
-  private doJump() {
-    if (this.jump.jump) {
-      // this is not great if we have lots of layers...
-      this.olMap.getLayers().forEach(layer => this.recursiveJump(layer))
+    const jumpTo = map.get('jump');
+
+    if (jumpTo) {
+      const parts = jumpTo?.split(';')!!
+      this.jump.layer = parts[0]
+      this.jump.jump = parts[1]
     }
   }
 
   ngOnInit() {
-    this.route.queryParamMap.subscribe(map => {
-      const floor = map.get('floor')
-      if (floor) {
-        this.changeFloor(floor);
-      }
-
-      const jumpTo = map.get('jump');
-
-      if (jumpTo) {
-        const parts = jumpTo?.split(';')!!
-        this.jump.layer = parts[0]
-        this.jump.jump = parts[1]
-        console.log(this.jump)
-      } else {
-        this.jump.layer = null;
-        this.jump.jump = null;
-      }
-
-
-    })
+    this.parseGetParameters();
 
     this.registerEPSG2056()
     this.olMap = new Map({
@@ -153,19 +113,27 @@ export class MapComponent implements OnInit {
       controls: defaultControls().extend([new FloorChangerControl(this, {})])
     });
 
+    this.selectionOverlay = new VectorLayer<VectorSource<any>>({
+      map: this.olMap,
+      source: new VectorSource<any>({features: new Collection()}),
+      style: new Style({stroke: new Stroke({color: 'red', width: 2})})
+    });
+
     this.olMap.on('singleclick', evt => this.onClick(this.olMap, evt));
 
-    this.createBackgroundLayer().subscribe(lyr => {
+    this.createBackgroundLayer().toPromise().then(lyr => {
       this.olMap.getLayers().insertAt(0, lyr);
       lyr.setVisible(true);
     })
 
     this.maps.observableMapId.subscribe(change => {
+      console.log("mapId change " + change)
       this.currentFloor.forEach(e => this.olMap.removeLayer(e));
       this.loadFloor();
     });
 
-    this.loadFloor();
+    // This load floor is not necessary, since the mapId will be automatically set
+    // this.loadFloor();
   }
 
   registerEPSG2056() {
@@ -185,44 +153,75 @@ export class MapComponent implements OnInit {
 
         return new Tile({
           source: new WMTS(options),
-          opacity: 1.0
+          opacity: 1.0,
+          zIndex: -1000
         });
       }));
   }
 
-  getWMSLayers(): Observable<LayerGroup[]> {
+  getWMSLayers(): Promise<LayerGroup[]> {
     return this.maps.getWMSLayers(this.dimension)
-      .pipe(map(content => {
+      .toPromise()
+      .then(content => {
+        return Promise.all(content.map(grp => {
+          const layers = Promise.all(grp.layers.map(layerDef => {
+            if (layerDef.kind.toLowerCase() === "wmts") {
+              const parser = new WMTSCapabilities();
+              const r: Promise<Tile<any>> = this.http.get(layerDef.url, {responseType: 'text'})
+                .toPromise()
+                .then(content => {
+                  const options = optionsFromCapabilities(parser.read(content), layerDef.params);
+                  for (let param in layerDef.params) {
+                    if (layerDef.params.hasOwnProperty(param) && param.startsWith("dimension.")) {
+                      options.dimensions[param.slice("dimension.".length)] = layerDef.params[param]
+                    }
+                  }
 
-        return content.map(grp => {
-          const layers = grp.layers.map(layerDef => {
-            return new Tile({
-              source: new TileWMS({
-                url: layerDef.url,
-                params: layerDef.params
-              }),
-              opacity: 1.0,
-              visible: layerDef.defaultVisibility,
+                  return new Tile({
+                    source: new WMTS(options),
+                    opacity: 1.0,
+                    zIndex: layerDef.zIndex,
+                    visible: layerDef.defaultVisibility,
+                    properties: {
+                      title: layerDef.title
+                    },
+                  });
+                });
+
+              return r;
+            } else {
+              return new Tile({
+                source: new TileWMS({
+                  url: layerDef.url,
+                  params: layerDef.params,
+                  attributions: 'EPFL/SwissTopo'
+                }),
+                opacity: 1.0,
+                visible: layerDef.defaultVisibility,
+                properties: {
+                  title: layerDef.title
+                },
+                zIndex: layerDef.zIndex
+              })
+            }
+          }));
+
+          return layers.then(layers => {
+            return new LayerGroup({
+              layers: layers,
               properties: {
-                title: layerDef.title
+                title: grp.name
               }
             })
-          });
-
-          return new LayerGroup({
-            layers: layers,
-            properties: {
-              title: grp.name
-            }
           })
-        })
-      }))
+        }))
+      });
   }
 
-  getGeoJsonLayers(): Observable<LayerGroup[]> {
+  getGeoJsonLayers(): Promise<LayerGroup[]> {
     return this.maps.getJsonLayers(this.dimension)
-      .pipe(map(content => {
-
+      .toPromise()
+      .then(content => {
         return content.map(grp => {
           const layers = grp.layers.map(layerDef => {
             const reader = new GeoJSON();
@@ -232,10 +231,12 @@ export class MapComponent implements OnInit {
               source: source,
               declutter: true,
               style: layerDef.style ? getStyle(layerDef.style) : (x) => {
-                return new Style({stroke: new Stroke({
+                return new Style({
+                  stroke: new Stroke({
                     color: 'red',
                     width: 1,
-                  }), fill: new Fill({color: 'rgba(55,55,55,1.0)'})})
+                  }), fill: new Fill({color: 'rgba(55,55,55,1.0)'})
+                })
               },
               properties: {
                 title: layerDef.title,
@@ -254,10 +255,79 @@ export class MapComponent implements OnInit {
             }
           })
         })
-      }))
+      })
   }
 
-  closePopup() {
+  unselectAll() {
     this.sidebar!.clear();
+    this.selected.forEach(e => this.selectionOverlay?.getSource()?.removeFeature(e));
+    this.selected = [];
+  }
+
+  private select(entities: [Feature<any>, Layer<any>][]) {
+    console.log("selecting")
+    console.log(entities)
+
+    const features: [any, Layer<any>][] = [];
+
+    entities.forEach(tuple => {
+      console.log(tuple)
+      const entity = tuple[0]
+      const layer = tuple[1]
+      if (this.selected.indexOf(entity) === -1) {
+        this.selected.push(entity);
+        this.selectionOverlay?.getSource()?.addFeature(entity)
+      }
+
+      const attributes: [string, string][] = []
+
+      for (let k of (entity as any).getKeys()) {
+        if (k === 'geometry' || !entity.get(k) || entity.get(k) === "null") continue;
+
+        attributes.push([k, entity.get(k)])
+      }
+
+      const element: [any, Layer<any>] = [attributes, layer]
+      features.push(element);
+    })
+
+    if (features.length > 0) {
+      this.sidebar?.setFeatures(this.dimension, features)
+    }
+  }
+
+  private onClick(map: Map, event: any) {
+    this.unselectAll()
+
+    const pixel = map.getEventPixel(event.originalEvent)
+    const features: [Feature<any>, Layer<any>][] = [];
+    map.forEachFeatureAtPixel(pixel, (feature, layer) => {
+      features.push([feature as Feature<any>, layer])
+    })
+
+    if (features.length > 0) {
+      this.select(features)
+    }
+  }
+
+  private recursiveJump(layer: BaseLayer) {
+    if ((layer as any).getLayers) {
+      (layer as LayerGroup).getLayers().forEach(layer => this.recursiveJump(layer))
+    } else {
+      if (layer.getProperties().tableName && layer.getProperties().tableName === this.jump.layer) {
+        const feature = (layer as Layer<any>).getSource().getFeatureById(this.jump.jump);
+        const center = getCenter(feature.getGeometry().getExtent())
+        this.olMap.getView().setCenter(center);
+        this.olMap.getView().setZoom(21);
+        this.select([[feature, layer as Layer<any>]]);
+      }
+    }
+  }
+
+  private doJump() {
+    if (this.jump.jump) {
+      // this is not great if we have lots of layers...
+      this.olMap.getLayers().forEach(layer => this.recursiveJump(layer))
+    }
   }
 }

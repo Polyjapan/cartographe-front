@@ -6,6 +6,8 @@ export interface WMSLayerDef extends LayerDef {
   dimensions: string[];
   dimensionName: string;
   defaultVisibility: boolean;
+  kind: string;
+  zIndex: number;
 }
 
 export interface LayerGroupDef<T> {
