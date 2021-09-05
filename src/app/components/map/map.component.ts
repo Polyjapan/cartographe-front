@@ -1,7 +1,7 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import LayerGroup from "ol/layer/Group";
 import * as proj4x from "proj4";
-import {Map, View} from "ol";
+import {Feature, Map, View} from "ol";
 import {HttpClient} from "@angular/common/http";
 import {get} from "ol/proj";
 import {defaults as defaultControls} from "ol/control";
@@ -18,6 +18,7 @@ import BaseLayer from "ol/layer/Base";
 import {MapsService} from "../../services/maps.service.";
 import {defaults as defaultInteractions, Modify, Select,} from 'ol/interaction';
 import {LayersService} from "../../services/layers.service";
+import {InfoboxComponent} from "../infobox/infobox.component";
 
 @Component({
   selector: 'app-map',
@@ -25,13 +26,17 @@ import {LayersService} from "../../services/layers.service";
   styleUrls: ['./map.component.css']
 })
 export class MapComponent implements OnInit {
+  @ViewChild(InfoboxComponent) infobox?: InfoboxComponent;
+
+
   dimension = "1"
   currentFloor: LayerGroup[] = []
 
-  jump: { layer: string | null, jump: string | null, dimension: string | null } = {
+  jump: { layer: string | null, jump: string | null, dimension: string | null, field: string | null } = {
     layer: null,
     jump: null,
-    dimension: null
+    dimension: null,
+    field: null
   }
   selectInteraction: Select = new Select();
   private proj4 = (proj4x as any).default
@@ -41,6 +46,8 @@ export class MapComponent implements OnInit {
   }
 
   changeFloor(dim: string) {
+    this.infobox!!.floor = dim;
+
     this.currentFloor.forEach(e => this.olMap.removeLayer(e));
     this.dimension = dim;
     this.loadFloor()
@@ -149,7 +156,12 @@ export class MapComponent implements OnInit {
     if (jumpTo) {
       const parts = jumpTo?.split(';')!!
       this.jump.layer = parts[0]
-      this.jump.jump = parts[1]
+      if (parts.length === 3) {
+        this.jump.field = parts[1]
+        this.jump.jump = parts[2]
+      } else {
+        this.jump.jump = parts[1]
+      }
     }
   }
 
@@ -158,7 +170,14 @@ export class MapComponent implements OnInit {
       (layer as LayerGroup).getLayers().forEach(layer => this.recursiveJump(layer))
     } else {
       if (layer.getProperties().tableName && layer.getProperties().tableName === this.jump.layer) {
-        const feature = (layer as Layer<any>).getSource().getFeatureById(this.jump.jump);
+        let feature = null;
+        if (this.jump.field === null || this.jump.field === 'id') {
+          feature = (layer as Layer<any>).getSource().getFeatureById(this.jump.jump);
+        } else {
+          feature = (layer as Layer<any>).getSource().getFeatures()
+            .find((feature: Feature<any>) => feature.get(this.jump.field!!) === this.jump.jump)
+        }
+
         const center = getCenter(feature.getGeometry().getExtent())
         this.olMap.getView().setCenter(center);
         this.olMap.getView().setZoom(22);
