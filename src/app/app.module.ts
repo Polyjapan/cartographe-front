@@ -6,10 +6,9 @@ import {HttpClientModule} from "@angular/common/http";
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MapComponent } from './components/map/map.component';
 import {MatSidenavModule} from "@angular/material/sidenav";
-import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { InfoboxComponent } from './components/infobox/infobox.component';
 import {MatListModule} from "@angular/material/list";
 import { AppRoutingModule } from './app-routing.module';
-import { MainComponent } from './components/main/main.component';
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatIconModule} from "@angular/material/icon";
 import {JwtModule} from "@auth0/angular-jwt";
@@ -27,6 +26,7 @@ import {MapsService} from "./services/maps.service.";
 import {MatMenuModule} from "@angular/material/menu";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatSnackBar, MatSnackBarModule} from "@angular/material/snack-bar";
+import {LayersService} from "./services/layers.service";
 
 export function tokenGetter() {
   return localStorage.getItem('id_token');
@@ -36,8 +36,7 @@ export function tokenGetter() {
   declarations: [
     AppComponent,
     MapComponent,
-    SidebarComponent,
-    MainComponent,
+    InfoboxComponent,
     LoginCallbackComponent,
     RequireLoginComponent,
     SelectMapComponent
@@ -67,7 +66,7 @@ export function tokenGetter() {
         }
       }),
     ],
-  providers: [LoginService, AuthService, MapsService],
+  providers: [LoginService, AuthService, MapsService, LayersService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -1,0 +1,28 @@
+<ng-container *ngIf="(features | async) as feat">
+
+  <mat-card *ngIf="feat.length > 0">
+    <h2 matSubheader>Attributs {{feat.length > 1 ? 'des entités' : 'de l\'entité'}}</h2>
+
+    <ng-container *ngFor="let f of feat">
+      <h3 matSubheader *ngIf="feat.length > 1">Couche : {{f.layer}}</h3>
+
+      <table>
+        <tr>
+          <td><b>Lien direct</b></td>
+          <td>
+            <button mat-stroked-button (click)="copyLink(f)">
+              <mat-icon>link</mat-icon>
+              Copier
+            </button>
+          </td>
+        </tr>
+
+
+        <tr *ngFor="let e of f.keys">
+          <td><strong>{{e}}</strong></td>
+          <td>{{f.map.get(e)}}</td>
+        </tr>
+      </table>
+    </ng-container>
+  </mat-card>
+</ng-container>

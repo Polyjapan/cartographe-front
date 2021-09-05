@@ -4,6 +4,15 @@
   width: 100%;
 }
 
+#overlay {
+  position: absolute;
+  bottom: calc(1em + 32px);
+  right: .5em;
+  max-width: 125rem;
+  overflow: auto;
+  z-index: 1;
+  /*background-color: #303030;*/
+}
 
 /* From QGIS2Web */
 .ol-popup {
