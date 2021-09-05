@@ -20,7 +20,12 @@
 
         <tr *ngFor="let e of f.keys">
           <td><strong>{{e}}</strong></td>
-          <td>{{f.map.get(e)}}</td>
+          <td>
+            <ng-container *ngIf="f.map.get(e)?.startsWith('https://') ; else def">
+              <a [href]="f.map.get(e)">{{f.map.get(e)?.substr(0, 32) + "..."}}</a>
+            </ng-container>
+            <ng-template #def>{{f.map.get(e)}}</ng-template>
+          </td>
         </tr>
       </table>
     </ng-container>

@@ -48,7 +48,7 @@ export class InfoboxComponent implements OnInit {
   copyLink(f: FeatureDescription) {
     const link = this.permaLink(f.map.get('uid')!!.replace('#', ';'))
     navigator.clipboard.writeText(link).then(() => {
-      this.snack.open("URL copiée!")
+      this.snack.open("URL copiée!", "Ok", {duration: 3500})
     })
   }
 

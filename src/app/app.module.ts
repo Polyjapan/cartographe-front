@@ -31,6 +31,7 @@ import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import { LayerSelectorComponent } from './components/layer-selector/layer-selector.component';
 import { LayerRowComponent } from './components/layer-selector/layer-row/layer-row.component';
 import {MatExpansionModule, MatExpansionPanel} from "@angular/material/expansion";
+import { ModifyAttributesComponent } from './components/modify-attributes/modify-attributes.component';
 
 export function tokenGetter() {
   return localStorage.getItem('id_token');
@@ -45,7 +46,8 @@ export function tokenGetter() {
     RequireLoginComponent,
     SelectMapComponent,
     LayerSelectorComponent,
-    LayerRowComponent
+    LayerRowComponent,
+    ModifyAttributesComponent
   ],
     imports: [
         BrowserModule,

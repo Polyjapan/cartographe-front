@@ -10,7 +10,7 @@ import {Router} from "@angular/router";
 export class RequireLoginComponent implements OnInit {
   private service = window.location.origin;
 
-  url: string = environment.auth.apiurl + '/cas/login?service=' + this.service;
+  url: string = environment.auth.apiurl + '/cas/login?service=' + this.service + '/login-callback';
 
   constructor(private router: Router) { }
 
