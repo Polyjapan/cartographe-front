@@ -1,0 +1,15 @@
+
+<ng-container *ngIf="layer?.get('title')">
+  <td [colSpan]="$any(layer)?.getLayers ? 1 : 2">
+    <mat-slide-toggle [checked]="layer?.get('visible') === true"
+                      (change)="layer?.set('visible', $event.checked)">{{layer?.get('title')}}</mat-slide-toggle>
+  </td>
+  <td *ngIf="$any(layer)?.getLayers">
+    <span (click)="expanded = !expanded">
+      <mat-icon>{{expanded ? "chevron_left" : "chevron_right"}}</mat-icon>
+    </span></td>
+</ng-container>
+<br>
+<ng-container *ngIf="expanded">
+  <app-layer-selector *ngIf="$any(layer)?.getLayers" [layers]="$any(layer)?.getLayers().getArray()"></app-layer-selector>
+</ng-container>

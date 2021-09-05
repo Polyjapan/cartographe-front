@@ -14,6 +14,15 @@
   /*background-color: #303030;*/
 }
 
+#layer-select {
+  position: absolute;
+  top: calc(64px + .5em);
+  right: .5em;
+  max-width: 125rem;
+  z-index: 1;
+  /*background-color: #303030;*/
+}
+
 /* From QGIS2Web */
 .ol-popup {
   display: none;

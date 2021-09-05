@@ -1,0 +1,5 @@
+<table>
+  <ng-container *ngFor="let layer of layers">
+    <tr app-layer-row *ngIf="layer.get('title')" [layer]="layer"></tr>
+  </ng-container>
+</table>

@@ -35,7 +35,7 @@ export class MapComponent implements OnInit {
   }
   selectInteraction: Select = new Select();
   private proj4 = (proj4x as any).default
-  private olMap: Map = new Map({});
+  olMap: Map = new Map({});
 
   constructor(private http: HttpClient, private route: ActivatedRoute, private maps: MapsService, private layers: LayersService) {
   }

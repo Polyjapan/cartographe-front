@@ -27,6 +27,10 @@ import {MatMenuModule} from "@angular/material/menu";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatSnackBar, MatSnackBarModule} from "@angular/material/snack-bar";
 import {LayersService} from "./services/layers.service";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
+import { LayerSelectorComponent } from './components/layer-selector/layer-selector.component';
+import { LayerRowComponent } from './components/layer-selector/layer-row/layer-row.component';
+import {MatExpansionModule, MatExpansionPanel} from "@angular/material/expansion";
 
 export function tokenGetter() {
   return localStorage.getItem('id_token');
@@ -39,7 +43,9 @@ export function tokenGetter() {
     InfoboxComponent,
     LoginCallbackComponent,
     RequireLoginComponent,
-    SelectMapComponent
+    SelectMapComponent,
+    LayerSelectorComponent,
+    LayerRowComponent
   ],
     imports: [
         BrowserModule,
@@ -58,6 +64,8 @@ export function tokenGetter() {
       MatMenuModule,
       MatProgressSpinnerModule,
       MatSnackBarModule,
+      MatSlideToggleModule,
+      MatExpansionModule,
 
       JwtModule.forRoot({
         config: {
