@@ -26,7 +26,7 @@ export class LoginCallbackComponent implements OnInit {
           console.log(success)
           const redirect = this.authService.login(success.session);
           this.done = true;
-          this.route.navigateByUrl(redirect);
+          this.route.navigateByUrl(redirect).then(_ => window.location.reload());
         })
         .catch(err => {
           console.log(err)

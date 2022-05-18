@@ -14,6 +14,12 @@ export class AuthService {
 
   login(token: string): UrlTree {
     localStorage.setItem('id_token', token);
+
+    const d = new Date();
+    d.setTime(d.getTime() + (2 * 24 * 60 * 60 * 1000));
+    let expires = "expires=" + d.toUTCString();
+    document.cookie = "session=" + token + ";" + expires + ";path=/";
+
     let act = this.loadNextAction();
 
     if (!act || act.startsWith('/?ticket=')) {
